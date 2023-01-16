@@ -21,7 +21,6 @@ RUN echo "Installing dependencies..." && \
 RUN pip3 install --upgrade pip
 RUN apt-get install python3-dev -y
 
-RUN apt-get install ffmpeg libsm6 libxext6  -y
 RUN apt-get install vim -y
 RUN apt-get install zip -y
 RUN apt-get install htop
