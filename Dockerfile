@@ -1,0 +1,57 @@
+FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
+RUN sed -i "s@http://.*archive.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
+RUN sed -i "s@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
+RUN echo "Installing dependencies..." && \
+	apt-get -y --no-install-recommends update --fix-missing && \
+	apt-get -y --no-install-recommends upgrade --fix-missing && \
+	apt-get install -y --no-install-recommends \
+	build-essential \
+	git \
+	locales \
+	zlib1g-dev \
+	libncurses5-dev \
+	libgdbm-dev \
+	libnss3-dev \
+	libssl-dev \
+	libreadline-dev \
+	libffi-dev \
+	wget \
+	python3-pip
+    
+RUN pip3 install --upgrade pip
+RUN apt-get install python3-dev -y
+
+RUN apt-get install ffmpeg libsm6 libxext6  -y
+RUN apt-get install vim -y
+RUN apt-get install zip -y
+RUN apt-get install htop
+
+COPY jupyter_notebook_config.py /etc/jupyter/
+
+ENV NODE_VERSION=14.15.4
+RUN apt install -y curl
+RUN curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash
+ENV NVM_DIR=/root/.nvm
+RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
+ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+RUN node --version
+RUN npm --version
+
+RUN pip3 install jupyter
+RUN pip3 install jupyterlab
+RUN pip3 install --upgrade jupyterlab
+
+COPY jupyter_notebook_config.py /etc/jupyter/
+
+RUN pip3 install tensorflow-gpu==2.6
+RUN pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+
+RUN mkdir -p /workspace
+WORKDIR /workspace
+
+
+EXPOSE 7000-10000
+EXPOSE 6006
+CMD  ["/usr/local/bin/jupyter", "lab", "/workspace", "--ip", "0.0.0.0", "--port", "8888" ,"--allow-root","--no-browser"]
